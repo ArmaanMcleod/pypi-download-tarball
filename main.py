@@ -28,10 +28,13 @@ from subprocess import DEVNULL
 
 from tqdm import tqdm
 
+from math import ceil
+
 # Global variables defined here
 ROOT_URL = "https://pypi.org/project/"
 ROOT_PATH = getcwd()
 EXTENSION = ".tar.gz"
+CHUNK_SIZE = 1024
 
 # Runnable commands depending if Windows or Linux
 OS_COMMANDS = {
@@ -96,10 +99,22 @@ def download_file(package, url, temp_dir):
     path = join(temp_dir, filename)
 
     print("Downloading %s..." % filename)
+    total_size = int(response.headers.get("content-length", 0))
+    bytes_wrote = 0
     with open(path, "wb") as file:
-        for chunk in response.iter_content(chunk_size=1024):
+        for chunk in tqdm(
+            response.iter_content(chunk_size=CHUNK_SIZE),
+            total=ceil(total_size // CHUNK_SIZE),
+            unit="KB",
+            unit_scale=True,
+        ):
             if chunk:
+                bytes_wrote += len(chunk)
                 file.write(chunk)
+
+    if total_size != 0 and bytes_wrote != total_size:
+        print("Failed to download %s" % filename)
+        exit(1)
 
     print("Unzipping %s..." % filename)
     with tarfile.open(path) as tar:
