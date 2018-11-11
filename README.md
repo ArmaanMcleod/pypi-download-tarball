@@ -1,6 +1,6 @@
 # Python Source Downloader
 
-Automates manual Python library installtion through the *PyPi* tarball. I've used this in the past when *pip* hasn't worked out, and I have to revert to manual installation of Python libraries.
+Automates manual Python library installation through the *PyPi* tarball. I've used this in the past when *pip* hasn't worked out, and I have to revert to manual installation of Python libraries.
 
 ## Installing Dependencies
 
@@ -16,17 +16,19 @@ Installing a single package from the command line:
 
 Installing via packages listed on separate lines in a `.txt` file. 
 
-### File Format:
+#### Example File Format:
 
 ```
 xlrd
+black
 pyinstaller
 ```
 
-### Example:
+#### Command:
 
-`python3 main.py -r packages.txt`
+`python main.py -r packages.txt`
 
 ## Note
 * This package currently works on **Windows** and **Linux**.
-* Uses **Python 3**.
+* If your using *Linux*, you will need to use `python3`/`pip3` instead of `python`/`pip`. 
+* Tested on **Python 3**.
