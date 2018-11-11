@@ -26,7 +26,7 @@ pyinstaller
 
 #### Command:
 
-`python main.py -r packages.txt`
+`python main.py -r <text file>`
 
 ## Note
 * This package currently works on **Windows** and **Linux**.
