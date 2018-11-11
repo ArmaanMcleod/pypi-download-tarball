@@ -79,14 +79,9 @@ def parse_file(filename):
     """
     Parses each line from file and inserts into list.
     """
-    lines = []
 
     with open(filename) as file:
-        for line in file:
-            lines.append(line.strip())
-
-    return lines
-
+        return [line.strip() for line in file.readlines()]
 
 def download_file(package, url, temp_dir):
     """
