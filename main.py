@@ -98,9 +98,38 @@ def download_file(package, url, temp_dir):
     filename = basename(url)
     path = join(temp_dir, filename)
 
+    # Run background thread to download file
     print("Downloading %s..." % filename)
+    download_thread = Thread(target=run_download(filename, response, path), args=())
+    download_thread.daemon = True
+    download_thread.start()
+
+    # Run background thread to unzip tar file
+    print("Unzipping %s..." % filename)
+    tar_thread = Thread(target=run_tar_unzip(path, temp_dir, package), args=())
+    tar_thread.daemon = True
+    tar_thread.start()
+
+    # Run background thread to install library
+    print("Installing %s..." % package)
+    process_thread = Thread(target=run_setup(OS_COMMANDS[name]), args=())
+    process_thread.daemon = True
+    process_thread.start()
+
+    # Make sure to return to original current working directory
+    # Ensures we can delete contents of temp folder safely
+    chdir(ROOT_PATH)
+
+
+def run_download(filename, response, path):
+    """
+    Downloads file from path using response.
+    """
+
     total_size = int(response.headers.get("content-length", 0))
     bytes_wrote = 0
+
+    # Write out downloaded file
     with open(path, "wb") as file:
         for chunk in tqdm(
             response.iter_content(chunk_size=CHUNK_SIZE),
@@ -116,36 +145,22 @@ def download_file(package, url, temp_dir):
         print("Failed to download %s" % filename)
         exit(1)
 
-    # Run background thread to unzip tar file
-    print("Unzipping %s..." % filename)
-    tar_thread = Thread(target=run_tar_unzip(path, temp_dir, package), args=())
-    tar_thread.daemon = True
-    tar_thread.start()
-
-    # Run background thread to install library
-    print("Installing %s..." % package)
-    process_thread = Thread(target=run_setup(OS_COMMANDS[name]), args=())
-    process_thread.daemon = True
-    process_thread.start()
-    for _ in tqdm(range(100)):
-        sleep(0.02)
-
-    # Make sure to return to original current working directory
-    # Ensures we can delete contents of temp folder safely
-    chdir(ROOT_PATH)
-
 
 def run_setup(commands):
     """
     Runs setup.py commands.
     """
     Popen(commands, shell=False, stderr=DEVNULL, stdout=DEVNULL)
+    for _ in tqdm(range(100)):
+        sleep(0.02)
 
 
 def run_tar_unzip(path, temp_dir, package):
     """
-    Unzips tar file and moves it to temporary directory
+    Unzips tar file and moves it to temporary directory.
     """
+
+    # Extract tar file into directory
     with tarfile.open(path) as tar:
         tar.extractall()
 
