@@ -204,9 +204,10 @@ def main():
                     extract_html(package, url, temp_dir)
                     print("%s has been installed." % package)
 
-    # If we fail to delete the temporary directory, try to remove it manually
+    # If we fail to delete the temporary directory, ignore it
+    # Not much we can do here if context manager can't clean up
     except OSError:
-        rmtree(temp_dir)
+        pass
 
 
 if __name__ == "__main__":

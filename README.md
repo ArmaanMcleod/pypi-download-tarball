@@ -1,8 +1,12 @@
 # Python Source Downloader
 
-Automates manual Python library installation through the *PyPi* tarball. I've used this in the past when *pip* hasn't worked out, and I have to revert to manual installation of Python libraries.
+Automates manual Python library installation through the *PyPi* `tar.gz` tarball. I've used this in the past when *pip* hasn't worked out, and I have to revert to manual installation of Python libraries.
 
 ## Installing Dependencies
+
+Libraries needed are [tqdm](https://pypi.org/project/tqdm/4.28.1/), [requests](https://pypi.org/project/requests/2.20.1/) and [beautifulsoup4](https://pypi.org/project/beautifulsoup4/4.6.3/).
+
+#### Install with:
 
 `pip install -r requirements.txt`
 
