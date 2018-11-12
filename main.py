@@ -1,6 +1,7 @@
 import tarfile
 
 from sys import exit
+from sys import modules
 
 from time import sleep
 
@@ -22,6 +23,8 @@ from os import chdir
 from tempfile import TemporaryDirectory
 
 from shutil import move
+from shutil import rmtree
+
 from subprocess import Popen
 from subprocess import DEVNULL
 
@@ -113,9 +116,41 @@ def download_file(package, url, temp_dir):
         print("Failed to download %s" % filename)
         exit(1)
 
+    # Run background thread to unzip tar file
     print("Unzipping %s..." % filename)
+    tar_thread = Thread(target=run_tar_unzip(path, temp_dir, package), args=())
+    tar_thread.daemon = True
+    tar_thread.start()
+
+    # Run background thread to install library
+    print("Installing %s..." % package)
+    process_thread = Thread(target=run_setup(OS_COMMANDS[name]), args=())
+    process_thread.daemon = True
+    process_thread.start()
+    for _ in tqdm(range(100)):
+        sleep(0.02)
+
+    # Make sure to return to original current working directory
+    # Ensures we can delete contents of temp folder safely
+    chdir(ROOT_PATH)
+
+
+def run_setup(commands):
+    """
+    Runs setup.py commands.
+    """
+    Popen(commands, shell=False, stderr=DEVNULL, stdout=DEVNULL)
+
+
+def run_tar_unzip(path, temp_dir, package):
+    """
+    Unzips tar file and moves it to temporary directory
+    """
     with tarfile.open(path) as tar:
         tar.extractall()
+
+    for _ in tqdm(range(100)):
+        sleep(0.02)
 
     # Extract file prefix
     tar_name, _, _ = basename(tar.name).rsplit(".", 2)
@@ -126,18 +161,6 @@ def download_file(package, url, temp_dir):
     if not exists("setup.py"):
         print("setup.py for package %s does not exist" % package)
         exit(1)
-
-    print("Installing %s..." % package)
-
-    # Run background thread to run seperate process
-    background_thread = BackgroundThread(OS_COMMANDS[name])
-    background_thread.start()
-    for _ in tqdm(range(100)):
-        sleep(0.02)
-
-    # Make sure to return to original current working directory
-    # Ensures we can delete contents of temp folder safely
-    chdir(ROOT_PATH)
 
 
 def main():
@@ -153,31 +176,22 @@ def main():
     args = parser.parse_args()
 
     # Create temporary directory and start processing
-    with TemporaryDirectory() as temp_dir:
-        if args.package:
-            url = ROOT_URL + args.package + "/#files"
-            extract_html(args.package, url, temp_dir)
-            print("%s has been installed." % args.package)
-        else:
-            packages = parse_file(args.requirements)
-            for package in packages:
-                url = ROOT_URL + package + "/#files"
-                extract_html(package, url, temp_dir)
-                print("%s has been installed." % package)
+    try:
+        with TemporaryDirectory() as temp_dir:
+            if args.package:
+                url = ROOT_URL + args.package + "/#files"
+                extract_html(args.package, url, temp_dir)
+                print("%s has been installed." % args.package)
+            else:
+                packages = parse_file(args.requirements)
+                for package in packages:
+                    url = ROOT_URL + package + "/#files"
+                    extract_html(package, url, temp_dir)
+                    print("%s has been installed." % package)
 
-
-class BackgroundThread(Thread):
-    """
-    Runs process in background daemon thread.
-    """
-
-    def __init__(self, commands):
-        self.commands = commands
-        Thread.__init__(self)
-        self.daemon = True
-
-    def run(self):
-        Popen(self.commands, shell=False, stderr=DEVNULL, stdout=DEVNULL)
+    # If we fail to delete the temporary directory, try to remove it manually
+    except OSError:
+        rmtree(temp_dir)
 
 
 if __name__ == "__main__":
