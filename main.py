@@ -168,19 +168,16 @@ def main():
 
 class BackgroundThread(Thread):
     """
-    Runs process in background thread.
+    Runs process in background daemon thread.
     """
 
     def __init__(self, commands):
-        self.stdout = None
-        self.stderr = None
         self.commands = commands
         Thread.__init__(self)
         self.daemon = True
 
     def run(self):
-        p = Popen(self.commands, shell=False, stderr=DEVNULL, stdout=DEVNULL)
-        self.stdout, self.stderr = p.communicate()
+        Popen(self.commands, shell=False, stderr=DEVNULL, stdout=DEVNULL)
 
 
 if __name__ == "__main__":
