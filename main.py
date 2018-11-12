@@ -82,6 +82,7 @@ def parse_file(filename):
     with open(filename) as file:
         return [line.strip() for line in file.readlines()]
 
+
 def download_file(package, url, temp_dir):
     """
     Downloads file and inserts into temporary folder.
@@ -160,7 +161,6 @@ def main():
                 url = ROOT_URL + package + "/#files"
                 extract_html(package, url, temp_dir)
                 print("%s has been installed." % package)
-
 
 
 if __name__ == "__main__":
