@@ -22,8 +22,7 @@ from os import chdir
 from tempfile import TemporaryDirectory
 
 from shutil import move
-
-from subprocess import call
+from subprocess import Popen
 from subprocess import DEVNULL
 
 from tqdm import tqdm
@@ -128,7 +127,7 @@ def download_file(package, url, temp_dir):
     print("Installing %s..." % package)
 
     # Call setup.py depending on OS
-    call(OS_COMMANDS[name], stderr=DEVNULL, stdout=DEVNULL)
+    Popen(OS_COMMANDS[name], stderr=DEVNULL, stdout=DEVNULL)
     for _ in tqdm(range(100)):
         sleep(0.02)
 
@@ -161,6 +160,7 @@ def main():
                 url = ROOT_URL + package + "/#files"
                 extract_html(package, url, temp_dir)
                 print("%s has been installed." % package)
+
 
 
 if __name__ == "__main__":
