@@ -25,6 +25,8 @@ from shutil import move
 from subprocess import Popen
 from subprocess import DEVNULL
 
+from threading import Thread
+
 from tqdm import tqdm
 
 from math import ceil
@@ -80,7 +82,7 @@ def parse_file(filename):
     """
 
     with open(filename) as file:
-        return [line.strip() for line in file.readlines()]
+        return list(map(str.strip, file.readlines()))
 
 
 def download_file(package, url, temp_dir):
@@ -127,8 +129,9 @@ def download_file(package, url, temp_dir):
 
     print("Installing %s..." % package)
 
-    # Call setup.py depending on OS
-    Popen(OS_COMMANDS[name], stderr=DEVNULL, stdout=DEVNULL)
+    # Run background thread to run seperate process
+    background_thread = BackgroundThread(OS_COMMANDS[name])
+    background_thread.start()
     for _ in tqdm(range(100)):
         sleep(0.02)
 
@@ -161,6 +164,23 @@ def main():
                 url = ROOT_URL + package + "/#files"
                 extract_html(package, url, temp_dir)
                 print("%s has been installed." % package)
+
+
+class BackgroundThread(Thread):
+    """
+    Runs process in background thread.
+    """
+
+    def __init__(self, commands):
+        self.stdout = None
+        self.stderr = None
+        self.commands = commands
+        Thread.__init__(self)
+        self.daemon = True
+
+    def run(self):
+        p = Popen(self.commands, shell=False, stderr=DEVNULL, stdout=DEVNULL)
+        self.stdout, self.stderr = p.communicate()
 
 
 if __name__ == "__main__":
