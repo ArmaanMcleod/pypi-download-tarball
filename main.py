@@ -163,9 +163,8 @@ def run_tar_unzip(path, temp_dir, package):
     # Extract tar file into directory
     with tarfile.open(path) as tar:
         tar.extractall()
-
-    for _ in tqdm(range(100)):
-        sleep(0.02)
+        for _ in tqdm(range(100)):
+            sleep(0.02)
 
     # Extract file prefix
     tar_name, _, _ = basename(tar.name).rsplit(".", 2)
