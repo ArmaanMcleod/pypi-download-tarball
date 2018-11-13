@@ -2,5 +2,7 @@
 /*
 
 # Except these files
+!main.py
 !.gitignore
+!README.md
 !requirements.txt
