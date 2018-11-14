@@ -161,7 +161,7 @@ def run_tar_unzip(path, temp_dir, package):
 
     # Extract tar file into directory
     with tarfile.open(path) as tar:
-        for member in tqdm(tar.getmembers()):
+        for member in tqdm(tar.getmembers(), total=len(tar.getmembers())):
             tar.extract(member)
 
     # Extract file prefix
