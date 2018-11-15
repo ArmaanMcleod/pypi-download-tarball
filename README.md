@@ -10,6 +10,10 @@ Libraries needed are [tqdm](https://pypi.org/project/tqdm/4.28.1/), [requests](h
 
 `pip install -r requirements.txt`
 
+Or:
+
+`make install`
+
 ## Basic Usage
 
 Installing a single package from the command line:
