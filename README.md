@@ -39,4 +39,5 @@ pyinstaller
 ## Note
 * This package currently works on **Windows** and **Linux**.
 * If your using *Linux*, you will need to use `python3`/`pip3` instead of `python`/`pip`. 
-* Tested on **Python 3**.
+* Tested on **Python 3.5+**.
+* If no `tar.gz` tarball is found, the program will look for next available `.zip` file.
