@@ -18,7 +18,7 @@ Or:
 
 Installing a single package from the command line:
 
-`python main.py -p <package name>`
+`python download.py -p <package name>`
 
 ## File Usage
 
@@ -34,7 +34,7 @@ pyinstaller
 
 #### Command:
 
-`python main.py -r <text file>`
+`python download.py -r <text file>`
 
 ## Note
 * This package currently works on **Windows** and **Linux**.
