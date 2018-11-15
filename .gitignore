@@ -1,8 +1,5 @@
-# Ignore everything
-/*
+# Ignore all text files
+*.txt
 
-# Except these files
-!main.py
-!.gitignore
-!README.md
+# Except requirements 
 !requirements.txt
