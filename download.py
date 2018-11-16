@@ -1,10 +1,5 @@
 import tarfile
 
-from sys import exit
-from sys import modules
-
-from time import sleep
-
 from requests import get
 from requests.exceptions import RequestException
 
@@ -106,11 +101,11 @@ def extract_html(package, url, temp_dir):
                 "%s or %s source file could not be found from %s"
                 % (TAR_EXTENSION, ZIP_EXTENSION, url)
             )
-            exit(1)
+            raise SystemExit
 
     except RequestException as error:
         print(error)
-        exit(1)
+        raise SystemExit
 
 
 def parse_file(filename):
@@ -128,33 +123,45 @@ def download_file(package, url, temp_dir, runner):
     """
 
     print("Requesting %s" % url)
-    response = get(url, stream=True)
-    filename = basename(url)
-    path = join(temp_dir, filename)
 
-    # Run background thread to download file
-    print("Downloading %s" % filename)
-    download_thread = Thread(target=run_download(filename, response, path), args=())
-    download_thread.daemon = True
-    download_thread.start()
+    # Attempt to download source file
+    try:
+        response = get(url, stream=True)
+        response.raise_for_status()
 
-    # Run background thread to extract .tar.gz or .zip file
-    print("Extracting %s" % filename)
-    extract_thread = Thread(
-        target=runner(path=path, temp_dir=temp_dir, package=package), args=()
-    )
-    extract_thread.daemon = True
-    extract_thread.start()
+        filename = basename(url)
+        path = join(temp_dir, filename)
 
-    # Run background thread to install library
-    print("Installing %s" % package)
-    process_thread = Thread(target=run_setup(OS_COMMANDS[name]), args=())
-    process_thread.daemon = True
-    process_thread.start()
+        # Run background thread to download file
+        print("Downloading %s" % filename)
+        download_thread = Thread(
+            target=run_download(filename=filename, response=response, path=path),
+            args=(),
+        )
+        download_thread.daemon = True
+        download_thread.start()
 
-    # Make sure to return to original current working directory
-    # Ensures we can delete contents of temp folder safely
-    chdir(ROOT_PATH)
+        # Run background thread to extract .tar.gz or .zip file
+        print("Extracting %s" % filename)
+        extract_thread = Thread(
+            target=runner(path=path, temp_dir=temp_dir, package=package), args=()
+        )
+        extract_thread.daemon = True
+        extract_thread.start()
+
+        # Run background thread to install library
+        print("Installing %s" % package)
+        process_thread = Thread(target=run_setup(OS_COMMANDS[name]), args=())
+        process_thread.daemon = True
+        process_thread.start()
+
+        # Make sure to return to original current working directory
+        # Ensures we can delete contents of temp folder safely
+        chdir(ROOT_PATH)
+
+    except RequestException as error:
+        print(error)
+        raise SystemExit
 
 
 def run_download(filename, response, path):
@@ -182,7 +189,7 @@ def run_download(filename, response, path):
     # Otherwise file not fully written
     if total_size != 0 and bytes_wrote != total_size:
         print("Failed to download %s" % filename)
-        exit(1)
+        raise SystemExit
 
 
 def run_setup(command):
@@ -220,7 +227,7 @@ def extract_zip(path, temp_dir, package):
     chdir(join(temp_dir, zip_name))
     if not exists("setup.py"):
         print("setup.py for package %s does not exist" % package)
-        exit(1)
+        raise SystemExit
 
 
 def extract_tarball(path, temp_dir, package):
@@ -246,7 +253,7 @@ def extract_tarball(path, temp_dir, package):
     chdir(join(temp_dir, tar_name))
     if not exists("setup.py"):
         print("setup.py for package %s does not exist" % package)
-        exit(1)
+        raise SystemExit
 
 
 def main():
