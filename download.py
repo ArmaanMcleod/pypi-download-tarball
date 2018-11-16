@@ -64,7 +64,7 @@ def extract_html(package, url, temp_dir):
     # Attempt to GET request webpage
     try:
 
-        html_page = get(url)
+        html_page = get(url=url)
         html_page.raise_for_status()
 
         print("Request successful")
@@ -120,7 +120,7 @@ def parse_file(filename):
     Parses each line from file and inserts into list.
     """
 
-    with open(filename) as file:
+    with open(file=filename) as file:
         return list(map(str.strip, file.readlines()))
 
 
@@ -133,7 +133,7 @@ def download_file(package, url, temp_dir, runner):
 
     # Attempt to download source file
     try:
-        response = get(url, stream=True)
+        response = get(url=url, stream=True)
         response.raise_for_status()
 
         filename = basename(url)
@@ -163,7 +163,7 @@ def download_file(package, url, temp_dir, runner):
 
         # Run background thread to install library
         print("Installing %s" % package)
-        process_thread = Thread(target=run_setup(commands), args=())
+        process_thread = Thread(target=run_setup(commands=commands), args=())
         process_thread.daemon = True
         process_thread.start()
 
@@ -188,7 +188,7 @@ def run_download(filename, response, path):
     # Display progress bar while at it
     with open(path, "wb") as file:
         for chunk in tqdm(
-            response.iter_content(chunk_size=CHUNK_SIZE),
+            iterable=response.iter_content(chunk_size=CHUNK_SIZE),
             total=ceil(total_size // CHUNK_SIZE),
             unit="KB",
             unit_scale=True,
@@ -212,12 +212,12 @@ def run_setup(commands):
     # Process each command and log each line from stdout
     # This is needed to find any errors in installation
     for command in commands:
-        with Popen(command, stdout=PIPE, bufsize=1, universal_newlines=True) as process:
+        with Popen(args=command, stdout=PIPE, bufsize=1, universal_newlines=True) as process:
             for line in process.stdout:
                 print(line, end="")
 
         if process.returncode != 0:
-            raise CalledProcessError(process.returncode, process.args)
+            raise CalledProcessError(returncode=process.returncode, cmd=process.args)
 
 
 def extract_zip(path, temp_dir, package):
@@ -227,9 +227,9 @@ def extract_zip(path, temp_dir, package):
 
     # Extract zip file into directory
     # Moved automatically into temporary directory
-    with ZipFile(path) as zip_file:
-        for file in tqdm(zip_file.namelist(), total=len(zip_file.namelist())):
-            zip_file.extract(file, temp_dir)
+    with ZipFile(file=path) as zip_file:
+        for file in tqdm(iterable=zip_file.namelist(), total=len(zip_file.namelist())):
+            zip_file.extract(member=file, path=temp_dir)
 
     # Extract file prefix
     filename = basename(path)
@@ -250,8 +250,8 @@ def extract_tarball(path, temp_dir, package):
 
     # Extract tar file into directory
     # Will store directory into current working directory
-    with tarfile.open(path) as tar:
-        for member in tqdm(tar.getmembers(), total=len(tar.getmembers())):
+    with tarfile.open(name=path) as tar:
+        for member in tqdm(iterable=tar.getmembers(), total=len(tar.getmembers())):
             tar.extract(member)
 
     # Extract file prefix
@@ -287,14 +287,14 @@ def main():
         # If one package specified
         if args.package:
             url = ROOT_URL + args.package + FILE_LOCATION
-            extract_html(args.package, url, temp_dir)
+            extract_html(package=args.package, url=url, temp_dir=temp_dir)
 
         # Otherwise, a file must have been supplied
         else:
-            packages = parse_file(args.requirements)
+            packages = parse_file(filename=args.requirements)
             for package in packages:
                 url = ROOT_URL + package + FILE_LOCATION
-                extract_html(package, url, temp_dir)
+                extract_html(package=package, url=url, temp_dir=temp_dir)
 
 
 if __name__ == "__main__":
