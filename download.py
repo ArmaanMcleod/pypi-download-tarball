@@ -34,11 +34,18 @@ from zipfile import ZipFile
 
 # Global variables defined here
 ROOT_URL = "https://pypi.org/project/"
+FILE_LOCATION = "/#files"
 ROOT_PATH = getcwd()
 CHUNK_SIZE = 1024
 
 # Source file extensions
 TAR_EXTENSION, ZIP_EXTENSION = ".tar.gz", ".zip"
+
+# Install requirements command
+REQUIREMENTS_COMMAND = ["pip3", "install", "-r", "requirements.txt"]
+
+# Scripts called in program
+SETUP_SCRIPT, REQUIREMENTS_FILE = "setup.py", "requirements.txt"
 
 # Runnable commands depending if Windows or Linux
 OS_COMMANDS = {
@@ -149,9 +156,14 @@ def download_file(package, url, temp_dir, runner):
         extract_thread.daemon = True
         extract_thread.start()
 
+        # Insert pre requirements install command if it exists
+        commands = [OS_COMMANDS[name]]
+        if exists(REQUIREMENTS_FILE):
+            commands.insert(0, REQUIREMENTS_COMMAND)
+
         # Run background thread to install library
         print("Installing %s" % package)
-        process_thread = Thread(target=run_setup(OS_COMMANDS[name]), args=())
+        process_thread = Thread(target=run_setup(commands), args=())
         process_thread.daemon = True
         process_thread.start()
 
@@ -192,19 +204,20 @@ def run_download(filename, response, path):
         raise SystemExit
 
 
-def run_setup(command):
+def run_setup(commands):
     """
     Runs setup.py commands.
     """
 
-    # Process command and log each line from stdout
+    # Process each command and log each line from stdout
     # This is needed to find any errors in installation
-    with Popen(command, stdout=PIPE, bufsize=1, universal_newlines=True) as process:
-        for line in process.stdout:
-            print(line, end="")
+    for command in commands:
+        with Popen(command, stdout=PIPE, bufsize=1, universal_newlines=True) as process:
+            for line in process.stdout:
+                print(line, end="")
 
-    if process.returncode != 0:
-        raise CalledProcessError(process.returncode, process.args)
+        if process.returncode != 0:
+            raise CalledProcessError(process.returncode, process.args)
 
 
 def extract_zip(path, temp_dir, package):
@@ -225,8 +238,8 @@ def extract_zip(path, temp_dir, package):
     # Switch to directory and Check that setup.py exists
     # Running setup.py from a path for some reason doesn't work
     chdir(join(temp_dir, zip_name))
-    if not exists("setup.py"):
-        print("setup.py for package %s does not exist" % package)
+    if not exists(SETUP_SCRIPT):
+        print("%s for package %s does not exist" % (SETUP_SCRIPT, package))
         raise SystemExit
 
 
@@ -251,8 +264,8 @@ def extract_tarball(path, temp_dir, package):
     # Switch to directory and Check that setup.py exists
     # Running setup.py from a path for some reason doesn't work
     chdir(join(temp_dir, tar_name))
-    if not exists("setup.py"):
-        print("setup.py for package %s does not exist" % package)
+    if not exists(SETUP_SCRIPT):
+        print("%s for package %s does not exist" % (SETUP_SCRIPT, package))
         raise SystemExit
 
 
@@ -273,14 +286,14 @@ def main():
 
         # If one package specified
         if args.package:
-            url = ROOT_URL + args.package + "/#files"
+            url = ROOT_URL + args.package + FILE_LOCATION
             extract_html(args.package, url, temp_dir)
 
         # Otherwise, a file must have been supplied
         else:
             packages = parse_file(args.requirements)
             for package in packages:
-                url = ROOT_URL + package + "/#files"
+                url = ROOT_URL + package + FILE_LOCATION
                 extract_html(package, url, temp_dir)
 
 
