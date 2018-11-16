@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Armaan McLeod
+# This script is part of the python-tarball-downloader package.
+# Released under a MIT License.
+
 import tarfile
 
 from requests import get
@@ -55,8 +59,23 @@ OS_COMMANDS = {
 
 
 def extract_html(package, url, temp_dir):
-    """
-    Extracts HTML from web page.
+    """Extracts HTML from web page.
+
+    Scrapes URL for file to download. Looks for .tar.gz file first, and
+    if none are present, look for .zip file to download. If none of these
+    are present, can't proceed with installation.
+
+    Args:
+        package (str): The package to install
+        url (str): The URL to scrape package source file
+        temp_dir (str): The temporary directory to store file
+    
+    Returns:
+        None
+
+    Raises:
+        RequestException: If error occured in HTTP GET request to url
+        SystemExit: If no source file could be retrieved or HTTP GET request failed. 
     """
 
     print("Requesting %s" % url)
@@ -116,8 +135,16 @@ def extract_html(package, url, temp_dir):
 
 
 def parse_file(filename):
-    """
-    Parses each line from file and inserts into list.
+    """Parse file contents.
+
+    Parses each line from file and inserts into list. 
+
+    Args:
+        filename (str): The file to parse
+    
+    Returns:
+        list: Nested list containing rows of file.
+
     """
 
     with open(file=filename) as file:
@@ -125,8 +152,23 @@ def parse_file(filename):
 
 
 def download_file(package, url, temp_dir, runner):
-    """
-    Downloads file and inserts into temporary folder.
+    """Downloads file from URL.
+
+    Downloads file specified at URL and inserts into temporary folder.
+
+    Args:
+        package (str): The package to install
+        url (str): The URL to scrape package source file
+        temp_dir (str): The temporary directory to store file
+        runner (function): The function to run for downloading file
+    
+    Returns:
+        None
+
+    Raises:
+        RequestException: If error occured in HTTP GET request to url
+        SystemExit: If Request error occured
+
     """
 
     print("Requesting %s" % url)
@@ -177,8 +219,22 @@ def download_file(package, url, temp_dir, runner):
 
 
 def run_download(filename, response, path):
-    """
-    Downloads file from path using response.
+    """Runs Download of file
+
+    Downloads file from path using HTTP response header data 
+    and writes it to path specified.
+
+    Args:
+        filename (str): The file to download
+        response (requests.models.Request): The response header from HTTP request
+        path (str): The path to write file to
+
+    Returns:
+        None
+
+    Raises:
+        SystemExit: If download was unsuccessful
+
     """
 
     total_size = int(response.headers.get("content-length", 0))
@@ -205,14 +261,28 @@ def run_download(filename, response, path):
 
 
 def run_setup(commands):
-    """
-    Runs setup.py commands.
+    """ Initiate setup.
+
+    Runs commands to install package via setup.py. The commands depend on
+    Operating System being used. 
+
+    Args:
+        commands (list): A list of commands to excecute
+
+    Returns:
+        None
+
+    Raises:
+        CalledProcessError: If the process opened could not be called
+
     """
 
     # Process each command and log each line from stdout
     # This is needed to find any errors in installation
     for command in commands:
-        with Popen(args=command, stdout=PIPE, bufsize=1, universal_newlines=True) as process:
+        with Popen(
+            args=command, stdout=PIPE, bufsize=1, universal_newlines=True
+        ) as process:
             for line in process.stdout:
                 print(line, end="")
 
@@ -221,8 +291,22 @@ def run_setup(commands):
 
 
 def extract_zip(path, temp_dir, package):
-    """
-    Extracts zip file and moves it to temporary directory
+    """Extracts zip file.
+
+    Extracts zip file and moves it to temporary directory. Also checks if
+    setup.py exists and switches to temporary directory context.
+
+    Args:
+        package (str): The package to install
+        url (str): The URL to scrape package source file
+        temp_dir (str): The temporary directory to store file
+
+    Returns:
+        None
+
+    Raises:
+        SystemExit: If setup.py does not exist, we can't perform installation
+
     """
 
     # Extract zip file into directory
@@ -244,8 +328,22 @@ def extract_zip(path, temp_dir, package):
 
 
 def extract_tarball(path, temp_dir, package):
-    """
-    Extracts tar file and moves it to temporary directory.
+    """Extracts tar compressed file.
+
+    Extracts tar compressed file and moves it to temporary directory. Also checks if
+    setup.py exists and switches to temporary directory context.
+
+    Args:
+        package (str): The package to install
+        url (str): The URL to scrape package source file
+        temp_dir (str): The temporary directory to store file
+
+    Returns:
+        None
+
+    Raises:
+        SystemExit: If setup.py does not exist, we can't perform installation
+        
     """
 
     # Extract tar file into directory
@@ -270,8 +368,11 @@ def extract_tarball(path, temp_dir, package):
 
 
 def main():
-    """
-    Everything run from here.
+    """ Main program run from here.
+
+    Handles initiation of script and processes command line arguements.
+    Also creates temporary directory used throughout program.
+
     """
 
     # Configure command line arguements
