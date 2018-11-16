@@ -20,14 +20,14 @@ from os.path import splitext
 from os import name
 from os import getcwd
 from os import chdir
-from os import listdir
 
 from tempfile import TemporaryDirectory
 
 from shutil import move
 
-from subprocess import call
-from subprocess import DEVNULL
+from subprocess import Popen
+from subprocess import PIPE
+from subprocess import CalledProcessError
 
 from threading import Thread
 
@@ -42,6 +42,7 @@ ROOT_URL = "https://pypi.org/project/"
 ROOT_PATH = getcwd()
 CHUNK_SIZE = 1024
 
+# Source file extensions
 TAR_EXTENSION, ZIP_EXTENSION = ".tar.gz", ".zip"
 
 # Runnable commands depending if Windows or Linux
@@ -56,7 +57,7 @@ def extract_html(package, url, temp_dir):
     Extracts HTML from web page.
     """
 
-    print("Requesting %s..." % url)
+    print("Requesting %s" % url)
 
     # Attempt to GET request webpage
     try:
@@ -69,38 +70,40 @@ def extract_html(package, url, temp_dir):
         # Create Beautiful soup parser
         soup = BeautifulSoup(html_page.text, features="html.parser")
 
-        found = False
+        candidate_links = {TAR_EXTENSION: None, ZIP_EXTENSION: None}
 
         # Iterate through all <a> tags with hrefs
+        # Also add .tar.gz and .zip extensions found
         for a in soup.find_all("a", href=True):
             file_link = a["href"]
 
-            # Download first tar.gz file
             if file_link.endswith(TAR_EXTENSION):
-                download_file(
-                    package=package,
-                    url=file_link,
-                    temp_dir=temp_dir,
-                    runner=extract_tarball,
-                )
-                found = True
-                break
-
-            # If no tar.gz file, Download first .zip
+                candidate_links[TAR_EXTENSION] = file_link
             elif file_link.endswith(ZIP_EXTENSION):
-                download_file(
-                    package=package,
-                    url=file_link,
-                    temp_dir=temp_dir,
-                    runner=extract_zip,
-                )
-                found = True
-                break
+                candidate_links[ZIP_EXTENSION] = file_link
 
-        # Source file not found, can't do anything else
-        if not found:
+        # Priority one: tar.gz file
+        if candidate_links.get(TAR_EXTENSION):
+            download_file(
+                package=package,
+                url=candidate_links[TAR_EXTENSION],
+                temp_dir=temp_dir,
+                runner=extract_tarball,
+            )
+
+        # Priority two: zip file
+        elif candidate_links.get(ZIP_EXTENSION):
+            download_file(
+                package=package,
+                url=candidate_links[ZIP_EXTENSION],
+                temp_dir=temp_dir,
+                runner=extract_zip,
+            )
+
+        # None of the above, this pypi package is unreliable
+        else:
             print(
-                "%s or %s source file could not be found from %s..."
+                "%s or %s source file could not be found from %s"
                 % (TAR_EXTENSION, ZIP_EXTENSION, url)
             )
             exit(1)
@@ -124,19 +127,19 @@ def download_file(package, url, temp_dir, runner):
     Downloads file and inserts into temporary folder.
     """
 
-    print("Requesting %s..." % url)
+    print("Requesting %s" % url)
     response = get(url, stream=True)
     filename = basename(url)
     path = join(temp_dir, filename)
 
     # Run background thread to download file
-    print("Downloading %s..." % filename)
+    print("Downloading %s" % filename)
     download_thread = Thread(target=run_download(filename, response, path), args=())
     download_thread.daemon = True
     download_thread.start()
 
     # Run background thread to extract .tar.gz or .zip file
-    print("Extracting %s..." % filename)
+    print("Extracting %s" % filename)
     extract_thread = Thread(
         target=runner(path=path, temp_dir=temp_dir, package=package), args=()
     )
@@ -144,8 +147,7 @@ def download_file(package, url, temp_dir, runner):
     extract_thread.start()
 
     # Run background thread to install library
-    print("Installing %s..." % package)
-    print("Please wait...")
+    print("Installing %s" % package)
     process_thread = Thread(target=run_setup(OS_COMMANDS[name]), args=())
     process_thread.daemon = True
     process_thread.start()
@@ -164,6 +166,7 @@ def run_download(filename, response, path):
     bytes_wrote = 0
 
     # Write out downloaded file
+    # Display progress bar while at it
     with open(path, "wb") as file:
         for chunk in tqdm(
             response.iter_content(chunk_size=CHUNK_SIZE),
@@ -175,18 +178,26 @@ def run_download(filename, response, path):
                 bytes_wrote += len(chunk)
                 file.write(chunk)
 
+    # Make sure the bytes and total size are equal
+    # Otherwise file not fully written
     if total_size != 0 and bytes_wrote != total_size:
         print("Failed to download %s" % filename)
         exit(1)
 
 
-def run_setup(commands):
+def run_setup(command):
     """
     Runs setup.py commands.
     """
-    call(commands, shell=False, stderr=DEVNULL, stdout=DEVNULL)
-    for _ in tqdm(range(100)):
-        sleep(0.2)
+
+    # Process command and log each line from stdout
+    # This is needed to find any errors in installation
+    with Popen(command, stdout=PIPE, bufsize=1, universal_newlines=True) as process:
+        for line in process.stdout:
+            print(line, end="")
+
+    if process.returncode != 0:
+        raise CalledProcessError(process.returncode, process.args)
 
 
 def extract_zip(path, temp_dir, package):
@@ -195,6 +206,7 @@ def extract_zip(path, temp_dir, package):
     """
 
     # Extract zip file into directory
+    # Moved automatically into temporary directory
     with ZipFile(path) as zip_file:
         for file in tqdm(zip_file.namelist(), total=len(zip_file.namelist())):
             zip_file.extract(file, temp_dir)
@@ -203,7 +215,8 @@ def extract_zip(path, temp_dir, package):
     filename = basename(path)
     zip_name, _ = splitext(filename)
 
-    # Check that setup.py exists
+    # Switch to directory and Check that setup.py exists
+    # Running setup.py from a path for some reason doesn't work
     chdir(join(temp_dir, zip_name))
     if not exists("setup.py"):
         print("setup.py for package %s does not exist" % package)
@@ -216,15 +229,20 @@ def extract_tarball(path, temp_dir, package):
     """
 
     # Extract tar file into directory
+    # Will store directory into current working directory
     with tarfile.open(path) as tar:
         for member in tqdm(tar.getmembers(), total=len(tar.getmembers())):
             tar.extract(member)
 
     # Extract file prefix
     tar_name, _, _ = basename(tar.name).rsplit(".", 2)
+
+    # Move directory into temporary directory
+    # Avoids flooding current working directory with too many folders
     move(join(ROOT_PATH, tar_name), temp_dir)
 
-    # Check that setup.py exists
+    # Switch to directory and Check that setup.py exists
+    # Running setup.py from a path for some reason doesn't work
     chdir(join(temp_dir, tar_name))
     if not exists("setup.py"):
         print("setup.py for package %s does not exist" % package)
@@ -245,16 +263,18 @@ def main():
 
     # Create temporary directory and start processing
     with TemporaryDirectory() as temp_dir:
+
+        # If one package specified
         if args.package:
             url = ROOT_URL + args.package + "/#files"
             extract_html(args.package, url, temp_dir)
-            print("%s has been installed." % args.package)
+
+        # Otherwise, a file must have been supplied
         else:
             packages = parse_file(args.requirements)
             for package in packages:
                 url = ROOT_URL + package + "/#files"
                 extract_html(package, url, temp_dir)
-                print("%s has been installed." % package)
 
 
 if __name__ == "__main__":
