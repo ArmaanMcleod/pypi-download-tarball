@@ -49,7 +49,7 @@ SETUP_SCRIPT, REQUIREMENTS_FILE = "setup.py", "requirements.txt"
 
 # Runnable commands depending if Windows or Linux
 OS_COMMANDS = {
-    "posix": ["python3", "setup.py", "--user"],
+    "posix": ["python3", "setup.py", "install", "--user"],
     "nt": ["python", "setup.py", "install"],
 }
 
