@@ -36,6 +36,10 @@ pyinstaller
 
 `python download.py -r <text file>`
 
+## Demo
+
+![](demo.gif)
+
 ## Note
 * This tool currently installs the latest version of your package.
 * This package currently works on **Windows** and **Linux**.
