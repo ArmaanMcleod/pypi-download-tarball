@@ -44,5 +44,4 @@ pyinstaller
 
 ## Future 
 * Integrate compatibility with **MacOSX**. Havn't really tested this out. 
-* Package project to and maybe publish to [pypi.org](https://pypi.org/).
-* Upload unit tests.  
+* Package project and maybe publish to [pypi.org](https://pypi.org/).
