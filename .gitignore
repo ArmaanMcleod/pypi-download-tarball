@@ -1,5 +1,6 @@
-# Ignore all text files
+# Ignore these extensions
 *.txt
+*.yml
 
 # Except requirements 
 !requirements.txt
