@@ -30,6 +30,8 @@ from subprocess import CalledProcessError
 
 from threading import Thread
 
+from time import sleep
+
 from tqdm import tqdm
 
 from math import ceil
@@ -198,14 +200,22 @@ def download_file(package, url, temp_dir, runner):
         extract_thread.daemon = True
         extract_thread.start()
 
-        # Insert pre requirements install command if it exists
-        commands = [OS_COMMANDS[name]]
-        if exists(REQUIREMENTS_FILE):
-            commands.insert(0, REQUIREMENTS_COMMAND)
+        package_install = "Installing %s" % package
+
+        # Create commands depending if requirements exist
+        commands = (
+            [
+                (REQUIREMENTS_COMMAND, "Installing dependencies"),
+                (OS_COMMANDS[name], package_install),
+            ]
+            if exists(REQUIREMENTS_FILE)
+            else [(OS_COMMANDS[name], package_install)]
+        )
 
         # Run background thread to install library
-        print("Installing %s" % package)
-        process_thread = Thread(target=run_setup(commands=commands), args=())
+        process_thread = Thread(
+            target=run_setup(commands=commands, package=package), args=()
+        )
         process_thread.daemon = True
         process_thread.start()
 
@@ -260,7 +270,7 @@ def run_download(filename, response, path):
         raise SystemExit
 
 
-def run_setup(commands):
+def run_setup(commands, package):
     """ Initiate setup.
 
     Runs commands to install package via setup.py. The commands depend on
@@ -268,6 +278,7 @@ def run_setup(commands):
 
     Args:
         commands (list): A list of commands to excecute
+        package (str): The package to install
 
     Returns:
         None
@@ -279,12 +290,14 @@ def run_setup(commands):
 
     # Process each command and log each line from stdout
     # This is needed to find any errors in installation
-    for command in commands:
+    for command, prompt in commands:
+        print(prompt)
         with Popen(
             args=command, stdout=PIPE, bufsize=1, universal_newlines=True
         ) as process:
-            for line in process.stdout:
-                print(line, end="")
+            lines = list(process.stdout)
+            for _ in tqdm(iterable=lines, total=len(lines)):
+                sleep(0.1)
 
         if process.returncode != 0:
             raise CalledProcessError(returncode=process.returncode, cmd=process.args)
@@ -389,6 +402,7 @@ def main():
         if args.package:
             url = ROOT_URL + args.package + FILE_LOCATION
             extract_html(package=args.package, url=url, temp_dir=temp_dir)
+            print(args.package, "installed\n")
 
         # Otherwise, a file must have been supplied
         else:
@@ -396,6 +410,9 @@ def main():
             for package in packages:
                 url = ROOT_URL + package + FILE_LOCATION
                 extract_html(package=package, url=url, temp_dir=temp_dir)
+                print(package, "installed\n")
+
+    print("Packages installed. You should now be able to import them.")
 
 
 if __name__ == "__main__":
