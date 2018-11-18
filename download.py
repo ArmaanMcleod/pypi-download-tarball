@@ -156,8 +156,15 @@ def parse_file(filename):
 
     """
 
+    lines = []
+
     with open(file=filename) as file:
-        return list(map(str.strip, file.readlines()))
+        for line in map(str.strip, file):
+
+            # split on '=' incase the file is given in 'package==...' form
+            lines.append(line.split("=")[0])
+
+    return lines
 
 
 def download_file(package, url, temp_dir, runner):
