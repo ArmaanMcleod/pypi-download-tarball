@@ -65,7 +65,7 @@ REQUIREMENTS_COMMAND = [
 SETUP_COMMAND = [executable, SETUP_SCRIPT, "install", "--user"]
 
 
-def extract_html(package, url, temp_dir):
+def extract_html(package, url, directory):
     """Extracts HTML from web page.
 
     Scrapes URL for file to download. Looks for .tar.gz file first, and
@@ -75,7 +75,7 @@ def extract_html(package, url, temp_dir):
     Args:
         package (str): The package to install
         url (str): The URL to scrape package source file
-        temp_dir (str): The temporary directory to store file
+        directory (str): The temporary directory to store file
     
     Returns:
         None
@@ -115,7 +115,7 @@ def extract_html(package, url, temp_dir):
             download_file(
                 package=package,
                 url=candidate_links[TAR_EXTENSION],
-                temp_dir=temp_dir,
+                directory=directory,
                 runner=extract_tarball,
             )
 
@@ -124,7 +124,7 @@ def extract_html(package, url, temp_dir):
             download_file(
                 package=package,
                 url=candidate_links[ZIP_EXTENSION],
-                temp_dir=temp_dir,
+                directory=directory,
                 runner=extract_zip,
             )
 
@@ -165,7 +165,7 @@ def parse_file(filename):
     return lines
 
 
-def download_file(package, url, temp_dir, runner):
+def download_file(package, url, directory, runner):
     """Downloads file from URL.
 
     Downloads file specified at URL and inserts into temporary folder.
@@ -173,7 +173,7 @@ def download_file(package, url, temp_dir, runner):
     Args:
         package (str): The package to install
         url (str): The URL to scrape package source file
-        temp_dir (str): The temporary directory to store file
+        directory (str): The temporary directory to store file
         runner (function): The function to run for downloading file
     
     Returns:
@@ -193,13 +193,13 @@ def download_file(package, url, temp_dir, runner):
         response.raise_for_status()
 
         filename = basename(url)
-        path = join(temp_dir, filename)
+        path = join(directory, filename)
 
         print("Downloading %s" % filename)
         run_download(filename=filename, response=response, path=path)
 
         print("Extracting %s" % filename)
-        runner(path=path, temp_dir=temp_dir, package=package),
+        runner(path=path, directory=directory, package=package),
 
         if exists(REQUIREMENTS_FILE):
             print("Installing dependencies")
@@ -288,7 +288,7 @@ def run_process(command):
         raise CalledProcessError(returncode=process.returncode, cmd=process.args)
 
 
-def extract_zip(path, temp_dir, package):
+def extract_zip(path, directory, package):
     """Extracts zip file.
 
     Extracts zip file and moves it to temporary directory. Also checks if
@@ -297,7 +297,7 @@ def extract_zip(path, temp_dir, package):
     Args:
         package (str): The package to install
         url (str): The URL to scrape package source file
-        temp_dir (str): The temporary directory to store file
+        directory (str): The temporary directory to store file
 
     Returns:
         None
@@ -311,7 +311,7 @@ def extract_zip(path, temp_dir, package):
     # Moved automatically into temporary directory
     with ZipFile(file=path) as zip_file:
         for file in tqdm(iterable=zip_file.namelist(), total=len(zip_file.namelist())):
-            zip_file.extract(member=file, path=temp_dir)
+            zip_file.extract(member=file, path=directory)
 
     # Extract file prefix
     filename = basename(path)
@@ -319,13 +319,13 @@ def extract_zip(path, temp_dir, package):
 
     # Switch to directory and Check that setup.py exists
     # Running setup.py from a path for some reason doesn't work
-    chdir(join(temp_dir, zip_name))
+    chdir(join(directory, zip_name))
     if not exists(SETUP_SCRIPT):
         print("%s for package %s does not exist" % (SETUP_SCRIPT, package))
         raise SystemExit
 
 
-def extract_tarball(path, temp_dir, package):
+def extract_tarball(path, directory, package):
     """Extracts tar compressed file.
 
     Extracts tar compressed file and moves it to temporary directory. Also checks if
@@ -334,7 +334,7 @@ def extract_tarball(path, temp_dir, package):
     Args:
         package (str): The package to install
         url (str): The URL to scrape package source file
-        temp_dir (str): The temporary directory to store file
+        directory (str): The temporary directory to store file
 
     Returns:
         None
@@ -355,11 +355,11 @@ def extract_tarball(path, temp_dir, package):
 
     # Move directory into temporary directory
     # Avoids flooding current working directory with too many folders
-    move(join(ROOT_PATH, tar_name), temp_dir)
+    move(join(ROOT_PATH, tar_name), directory)
 
     # Switch to directory and Check that setup.py exists
     # Running setup.py from a path for some reason doesn't work
-    chdir(join(temp_dir, tar_name))
+    chdir(join(directory, tar_name))
     if not exists(SETUP_SCRIPT):
         print("%s for package %s does not exist" % (SETUP_SCRIPT, package))
         raise SystemExit
@@ -381,12 +381,12 @@ def main():
     args = parser.parse_args()
 
     # Create temporary directory and start processing
-    with TemporaryDirectory() as temp_dir:
+    with TemporaryDirectory() as directory:
 
         # If one package specified
         if args.package:
             url = ROOT_URL + args.package + FILE_LOCATION
-            extract_html(package=args.package, url=url, temp_dir=temp_dir)
+            extract_html(package=args.package, url=url, directory=directory)
             print(args.package, "installed\n")
 
         # Otherwise, a file must have been supplied
@@ -394,7 +394,7 @@ def main():
             packages = parse_file(filename=args.requirements)
             for package in packages:
                 url = ROOT_URL + package + FILE_LOCATION
-                extract_html(package=package, url=url, temp_dir=temp_dir)
+                extract_html(package=package, url=url, directory=directory)
                 print(package, "installed\n")
 
     print("Packages installed. You should now be able to import them.")
