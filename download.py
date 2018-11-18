@@ -94,6 +94,8 @@ def request_url(url, stream):
     except RequestException as error:
         print(error)
         raise SystemExit
+    finally:
+        response.close()
 
 def extract_html(package, url, directory):
     """Extracts HTML from web page.
