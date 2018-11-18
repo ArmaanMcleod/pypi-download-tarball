@@ -38,6 +38,8 @@ from zipfile import ZipFile
 
 from sys import executable
 
+from contextlib import contextmanager
+
 # Global variables defined here
 ROOT_URL = "https://pypi.org/project/"
 FILE_LOCATION = "/#files"
@@ -64,6 +66,29 @@ REQUIREMENTS_COMMAND = [
 # Setup installation command
 SETUP_COMMAND = [executable, SETUP_SCRIPT, "install", "--user"]
 
+@contextmanager
+def request_url(url, stream):
+    """Handles requests to URL
+
+    Manages HTTP GET requests to url using context manager.
+    Allows convenient reuse throughout code. 
+
+    Args:
+        url (str): The URL to scrape package source file
+        stream (bool): Indicates whether download stream is needed
+
+    Yields:
+        requests.models.Request: The response header from HTTP request
+
+    """
+    
+    try:
+        response = get(url, stream=stream)
+        response.raise_for_status()
+        yield response
+    except RequestException as error:
+        print(error)
+        raise SystemExit
 
 def extract_html(package, url, directory):
     """Extracts HTML from web page.
@@ -76,9 +101,6 @@ def extract_html(package, url, directory):
         package (str): The package to install
         url (str): The URL to scrape package source file
         directory (str): The temporary directory to store file
-    
-    Returns:
-        None
 
     Raises:
         RequestException: If error occured in HTTP GET request to url
@@ -88,11 +110,7 @@ def extract_html(package, url, directory):
     print("Requesting %s" % url)
 
     # Attempt to GET request webpage
-    try:
-
-        html_page = get(url=url)
-        html_page.raise_for_status()
-
+    with request_url(url=url, stream=False) as html_page:
         print("Request successful")
 
         # Create Beautiful soup parser
@@ -136,10 +154,6 @@ def extract_html(package, url, directory):
             )
             raise SystemExit
 
-    except RequestException as error:
-        print(error)
-        raise SystemExit
-
 
 def parse_file(filename):
     """Parse file contents.
@@ -175,9 +189,6 @@ def download_file(package, url, directory, extractor):
         url (str): The URL to scrape package source file
         directory (str): The temporary directory to store file
         extractor (function): The function to run for extracting the file
-    
-    Returns:
-        None
 
     Raises:
         RequestException: If error occured in HTTP GET request to url
@@ -188,10 +199,7 @@ def download_file(package, url, directory, extractor):
     print("Requesting %s" % url)
 
     # Attempt to download source file
-    try:
-        response = get(url=url, stream=True)
-        response.raise_for_status()
-
+    with request_url(url=url, stream=False) as response:
         filename = basename(url)
         path = join(directory, filename)
 
@@ -212,10 +220,6 @@ def download_file(package, url, directory, extractor):
         # Ensures we can delete contents of temp folder safely
         chdir(ROOT_PATH)
 
-    except RequestException as error:
-        print(error)
-        raise SystemExit
-
 
 def run_download(filename, response, path):
     """Runs Download of file
@@ -227,9 +231,6 @@ def run_download(filename, response, path):
         filename (str): The file to download
         response (requests.models.Request): The response header from HTTP request
         path (str): The path to write file to
-
-    Returns:
-        None
 
     Raises:
         SystemExit: If download was unsuccessful
@@ -267,9 +268,6 @@ def run_process(command):
     Args:
         command (list): A list of commands to excecute
 
-    Returns:
-        None
-
     Raises:
         CalledProcessError: If the process opened could not be called
 
@@ -298,9 +296,6 @@ def extract_zip(path, directory, package):
         package (str): The package to install
         url (str): The URL to scrape package source file
         directory (str): The temporary directory to store file
-
-    Returns:
-        None
 
     Raises:
         SystemExit: If setup.py does not exist, we can't perform installation
@@ -335,9 +330,6 @@ def extract_tarball(path, directory, package):
         package (str): The package to install
         url (str): The URL to scrape package source file
         directory (str): The temporary directory to store file
-
-    Returns:
-        None
 
     Raises:
         SystemExit: If setup.py does not exist, we can't perform installation
