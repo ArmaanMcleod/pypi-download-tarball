@@ -80,6 +80,10 @@ def request_url(url, stream):
     Yields:
         requests.models.Request: The response header from HTTP request
 
+    Raises:
+        RequestException: If error occured in HTTP GET request to url
+        SystemExit: If no source file could be retrieved or HTTP GET request failed.
+
     """
     
     try:
@@ -102,9 +106,6 @@ def extract_html(package, url, directory):
         url (str): The URL to scrape package source file
         directory (str): The temporary directory to store file
 
-    Raises:
-        RequestException: If error occured in HTTP GET request to url
-        SystemExit: If no source file could be retrieved or HTTP GET request failed. 
     """
 
     print("Requesting %s" % url)
@@ -189,10 +190,6 @@ def download_file(package, url, directory, extractor):
         url (str): The URL to scrape package source file
         directory (str): The temporary directory to store file
         extractor (function): The function to run for extracting the file
-
-    Raises:
-        RequestException: If error occured in HTTP GET request to url
-        SystemExit: If Request error occured
 
     """
 
