@@ -38,6 +38,8 @@ from math import ceil
 
 from zipfile import ZipFile
 
+from sys import executable
+
 # Global variables defined here
 ROOT_URL = "https://pypi.org/project/"
 FILE_LOCATION = "/#files"
@@ -47,16 +49,16 @@ CHUNK_SIZE = 1024
 # Source file extensions
 TAR_EXTENSION, ZIP_EXTENSION = ".tar.gz", ".zip"
 
-# Install requirements command
-REQUIREMENTS_COMMAND = ["pip3", "install", "-r", "requirements.txt"]
-
 # Scripts called in program
 SETUP_SCRIPT, REQUIREMENTS_FILE = "setup.py", "requirements.txt"
 
+# Install requirements command
+REQUIREMENTS_COMMAND = [executable, "-m", "pip", "install", "-r", REQUIREMENTS_FILE]
+
 # Runnable commands depending if Windows or Linux
 OS_COMMANDS = {
-    "posix": ["python3", "setup.py", "install", "--user"],
-    "nt": ["python", "setup.py", "install"],
+    "posix": [executable, SETUP_SCRIPT, "install", "--user"],
+    "nt": [executable, SETUP_SCRIPT, "install"],
 }
 
 
@@ -200,21 +202,17 @@ def download_file(package, url, temp_dir, runner):
         extract_thread.daemon = True
         extract_thread.start()
 
-        package_install = "Installing %s" % package
-
-        # Create commands depending if requirements exist
-        commands = (
-            [
-                (REQUIREMENTS_COMMAND, "Installing dependencies"),
-                (OS_COMMANDS[name], package_install),
-            ]
-            if exists(REQUIREMENTS_FILE)
-            else [(OS_COMMANDS[name], package_install)]
-        )
+        # Run background thread to install dependencies
+        if exists(REQUIREMENTS_FILE):
+            print("Installing dependencies")
+            install_thread = Thread(target=run_process(command=REQUIREMENTS_COMMAND), args=())
+            install_thread.daemon = True
+            install_thread.start()
 
         # Run background thread to install library
+        print('Installing', package)
         process_thread = Thread(
-            target=run_setup(commands=commands, package=package), args=()
+            target=run_process(command=OS_COMMANDS[name]), args=()
         )
         process_thread.daemon = True
         process_thread.start()
@@ -269,16 +267,13 @@ def run_download(filename, response, path):
         print("Failed to download %s" % filename)
         raise SystemExit
 
+def run_process(command):
+    """ Runs Process
 
-def run_setup(commands, package):
-    """ Initiate setup.
-
-    Runs commands to install package via setup.py. The commands depend on
-    Operating System being used. 
+    Runs command in opened process in background
 
     Args:
-        commands (list): A list of commands to excecute
-        package (str): The package to install
+        command (list): A list of commands to excecute
 
     Returns:
         None
@@ -288,19 +283,17 @@ def run_setup(commands, package):
 
     """
 
-    # Process each command and log each line from stdout
+    # Process command and log each line from stdout
     # This is needed to find any errors in installation
-    for command, prompt in commands:
-        print(prompt)
-        with Popen(
-            args=command, stdout=PIPE, bufsize=1, universal_newlines=True
-        ) as process:
-            lines = list(process.stdout)
-            for _ in tqdm(iterable=lines, total=len(lines)):
-                sleep(0.1)
+    with Popen(
+        args=command, shell=False, stdout=PIPE, bufsize=1, universal_newlines=True
+    ) as process:
+        lines = list(process.stdout)
+        for _ in tqdm(iterable=lines, total=len(lines)):
+            sleep(0.1)
 
-        if process.returncode != 0:
-            raise CalledProcessError(returncode=process.returncode, cmd=process.args)
+    if process.returncode != 0:
+        raise CalledProcessError(returncode=process.returncode, cmd=process.args)
 
 
 def extract_zip(path, temp_dir, package):
