@@ -53,7 +53,15 @@ TAR_EXTENSION, ZIP_EXTENSION = ".tar.gz", ".zip"
 SETUP_SCRIPT, REQUIREMENTS_FILE = "setup.py", "requirements.txt"
 
 # Install requirements command
-REQUIREMENTS_COMMAND = [executable, "-m", "pip", "install", "-r", REQUIREMENTS_FILE, "--user"]
+REQUIREMENTS_COMMAND = [
+    executable,
+    "-m",
+    "pip",
+    "install",
+    "-r",
+    REQUIREMENTS_FILE,
+    "--user",
+]
 
 # Setup installation command
 SETUP_COMMAND = [executable, SETUP_SCRIPT, "install", "--user"]
