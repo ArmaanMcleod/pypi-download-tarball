@@ -28,8 +28,6 @@ from subprocess import Popen
 from subprocess import PIPE
 from subprocess import CalledProcessError
 
-from threading import Thread
-
 from time import sleep
 
 from tqdm import tqdm
@@ -197,37 +195,18 @@ def download_file(package, url, temp_dir, runner):
         filename = basename(url)
         path = join(temp_dir, filename)
 
-        # Run background thread to download file
         print("Downloading %s" % filename)
-        download_thread = Thread(
-            target=run_download(filename=filename, response=response, path=path),
-            args=(),
-        )
-        download_thread.daemon = True
-        download_thread.start()
+        run_download(filename=filename, response=response, path=path)
 
-        # Run background thread to extract .tar.gz or .zip file
         print("Extracting %s" % filename)
-        extract_thread = Thread(
-            target=runner(path=path, temp_dir=temp_dir, package=package), args=()
-        )
-        extract_thread.daemon = True
-        extract_thread.start()
+        runner(path=path, temp_dir=temp_dir, package=package),
 
-        # Run background thread to install dependencies
         if exists(REQUIREMENTS_FILE):
             print("Installing dependencies")
-            install_thread = Thread(
-                target=run_process(command=REQUIREMENTS_COMMAND), args=()
-            )
-            install_thread.daemon = True
-            install_thread.start()
+            run_process(command=REQUIREMENTS_COMMAND)
 
-        # Run background thread to install library
         print("Installing", package)
-        process_thread = Thread(target=run_process(command=SETUP_COMMAND), args=())
-        process_thread.daemon = True
-        process_thread.start()
+        run_process(command=SETUP_COMMAND)
 
         # Make sure to return to original current working directory
         # Ensures we can delete contents of temp folder safely
