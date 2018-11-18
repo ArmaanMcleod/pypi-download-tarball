@@ -53,13 +53,10 @@ TAR_EXTENSION, ZIP_EXTENSION = ".tar.gz", ".zip"
 SETUP_SCRIPT, REQUIREMENTS_FILE = "setup.py", "requirements.txt"
 
 # Install requirements command
-REQUIREMENTS_COMMAND = [executable, "-m", "pip", "install", "-r", REQUIREMENTS_FILE]
+REQUIREMENTS_COMMAND = [executable, "-m", "pip", "install", "-r", REQUIREMENTS_FILE, "--user"]
 
-# Runnable commands depending if Windows or Linux
-OS_COMMANDS = {
-    "posix": [executable, SETUP_SCRIPT, "install", "--user"],
-    "nt": [executable, SETUP_SCRIPT, "install"],
-}
+# Setup installation command
+SETUP_COMMAND = [executable, SETUP_SCRIPT, "install", "--user"]
 
 
 def extract_html(package, url, temp_dir):
@@ -205,15 +202,15 @@ def download_file(package, url, temp_dir, runner):
         # Run background thread to install dependencies
         if exists(REQUIREMENTS_FILE):
             print("Installing dependencies")
-            install_thread = Thread(target=run_process(command=REQUIREMENTS_COMMAND), args=())
+            install_thread = Thread(
+                target=run_process(command=REQUIREMENTS_COMMAND), args=()
+            )
             install_thread.daemon = True
             install_thread.start()
 
         # Run background thread to install library
-        print('Installing', package)
-        process_thread = Thread(
-            target=run_process(command=OS_COMMANDS[name]), args=()
-        )
+        print("Installing", package)
+        process_thread = Thread(target=run_process(command=SETUP_COMMAND), args=())
         process_thread.daemon = True
         process_thread.start()
 
@@ -266,6 +263,7 @@ def run_download(filename, response, path):
     if total_size != 0 and bytes_wrote != total_size:
         print("Failed to download %s" % filename)
         raise SystemExit
+
 
 def run_process(command):
     """ Runs Process
