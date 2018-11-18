@@ -116,7 +116,7 @@ def extract_html(package, url, directory):
                 package=package,
                 url=candidate_links[TAR_EXTENSION],
                 directory=directory,
-                runner=extract_tarball,
+                extractor=extract_tarball,
             )
 
         # Priority two: zip file
@@ -125,7 +125,7 @@ def extract_html(package, url, directory):
                 package=package,
                 url=candidate_links[ZIP_EXTENSION],
                 directory=directory,
-                runner=extract_zip,
+                extractor=extract_zip,
             )
 
         # None of the above, this pypi package is unreliable
@@ -165,7 +165,7 @@ def parse_file(filename):
     return lines
 
 
-def download_file(package, url, directory, runner):
+def download_file(package, url, directory, extractor):
     """Downloads file from URL.
 
     Downloads file specified at URL and inserts into temporary folder.
@@ -174,7 +174,7 @@ def download_file(package, url, directory, runner):
         package (str): The package to install
         url (str): The URL to scrape package source file
         directory (str): The temporary directory to store file
-        runner (function): The function to run for downloading file
+        extractor (function): The function to run for extracting the file
     
     Returns:
         None
@@ -199,7 +199,7 @@ def download_file(package, url, directory, runner):
         run_download(filename=filename, response=response, path=path)
 
         print("Extracting %s" % filename)
-        runner(path=path, directory=directory, package=package),
+        extractor(path=path, directory=directory, package=package),
 
         if exists(REQUIREMENTS_FILE):
             print("Installing dependencies")
