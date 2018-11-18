@@ -85,9 +85,10 @@ def request_url(url, stream):
         SystemExit: If no source file could be retrieved or HTTP GET request failed.
 
     """
+
+    response = get(url, stream=stream)
     
     try:
-        response = get(url, stream=stream)
         response.raise_for_status()
         yield response
     except RequestException as error:
