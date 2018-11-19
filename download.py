@@ -66,6 +66,7 @@ REQUIREMENTS_COMMAND = [
 # Setup installation command
 SETUP_COMMAND = [executable, SETUP_SCRIPT, "install", "--user"]
 
+
 @contextmanager
 def request_url(url, stream):
     """Handles requests to URL
@@ -87,15 +88,14 @@ def request_url(url, stream):
     """
 
     response = get(url, stream=stream)
-    
+
     try:
         response.raise_for_status()
         yield response
     except RequestException as error:
         print(error)
         raise SystemExit
-    finally:
-        response.close()
+
 
 def extract_html(package, url, directory):
     """Extracts HTML from web page.
