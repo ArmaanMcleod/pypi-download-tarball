@@ -38,7 +38,9 @@ pyinstaller
 
 ## Demo
 
-![](demo.gif)
+Installing [xlrd](https://pypi.org/project/xlrd/) module 
+
+![xlrd-example](demo.gif)
 
 ## Note
 * This tool currently installs the latest version of your package.
