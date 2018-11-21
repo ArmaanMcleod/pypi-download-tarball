@@ -87,7 +87,7 @@ def request_url(url, stream):
 
     """
 
-    response = get(url, stream=stream)
+    response = get(url=url, stream=stream)
 
     try:
         response.raise_for_status()
@@ -218,7 +218,7 @@ def download_file(package, url, directory, extractor):
 
         # Make sure to return to original current working directory
         # Ensures we can delete contents of temp folder safely
-        chdir(ROOT_PATH)
+        chdir(path=ROOT_PATH)
 
 
 def run_download(filename, response, path):
@@ -242,7 +242,7 @@ def run_download(filename, response, path):
 
     # Write out downloaded file
     # Display progress bar while at it
-    with open(path, "wb") as file:
+    with open(file=path, mode="wb") as file:
         for chunk in tqdm(
             iterable=response.iter_content(chunk_size=CHUNK_SIZE),
             total=ceil(total_size // CHUNK_SIZE),
@@ -314,8 +314,8 @@ def extract_zip(path, directory, package):
 
     # Switch to directory and Check that setup.py exists
     # Running setup.py from a path for some reason doesn't work
-    chdir(join(directory, zip_name))
-    if not exists(SETUP_SCRIPT):
+    chdir(path=join(directory, zip_name))
+    if not exists(path=SETUP_SCRIPT):
         print("%s for package %s does not exist" % (SETUP_SCRIPT, package))
         raise SystemExit
 
@@ -340,19 +340,19 @@ def extract_tarball(path, directory, package):
     # Will store directory into current working directory
     with tarfile.open(name=path) as tar:
         for member in tqdm(iterable=tar.getmembers(), total=len(tar.getmembers())):
-            tar.extract(member)
+            tar.extract(member=member)
 
     # Extract file prefix
     tar_name, _, _ = basename(tar.name).rsplit(".", 2)
 
     # Move directory into temporary directory
     # Avoids flooding current working directory with too many folders
-    move(join(ROOT_PATH, tar_name), directory)
+    move(src=join(ROOT_PATH, tar_name), dst=directory)
 
     # Switch to directory and Check that setup.py exists
     # Running setup.py from a path for some reason doesn't work
-    chdir(join(directory, tar_name))
-    if not exists(SETUP_SCRIPT):
+    chdir(path=join(directory, tar_name))
+    if not exists(path=SETUP_SCRIPT):
         print("%s for package %s does not exist" % (SETUP_SCRIPT, package))
         raise SystemExit
 
