@@ -19,7 +19,7 @@ install:
 clean:
 	rm -rf build/
 	rm -rf dist/
-	rm -rf python_tarball_downloader.egg-info
+	rm -rf tarball_downloader.egg-info
 
 pip_try_first:
 	pip install -r requirements.txt
