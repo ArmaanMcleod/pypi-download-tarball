@@ -1,6 +1,13 @@
-# Ignore these extensions
-*.txt
-*.yml
+# general things to ignore
+build/
+dist/
+*.egg-info/
+*.egg
+*.py[cod]
+__pycache__/
+*.so
+*~
 
-# Except requirements
-!requirements.txt
+# due to using tox and pytest
+.tox
+.cache
