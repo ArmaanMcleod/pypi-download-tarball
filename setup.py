@@ -110,7 +110,7 @@ setup(
     # the `py_modules` argument instead as follows, which will expect a file
     # called `my_module.py` to exist:
     #
-    #   py_modules=["my_module"],
+    py_modules=["download"],
     #
     packages=find_packages(exclude=[]),  # Required
     # This field lists other packages that your project depends on to run.
