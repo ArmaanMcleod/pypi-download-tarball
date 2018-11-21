@@ -1,6 +1,7 @@
 .PHONY: help
 .PHONY: install
 .PHONY: setup
+.PHONY: upload
 
 MAKEFLAGS += --no-print-directory
 
@@ -28,3 +29,6 @@ setup_try_first:
 setup_handle_error:
 	python3 setup.py sdist
 	python3 setup.py bdist_wheel
+
+upload:
+	twine upload dist/*
