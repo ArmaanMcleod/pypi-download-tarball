@@ -1,12 +1,16 @@
-# Tarball Downloader
+# Download Tarball
 
-[![PyPI version](https://badge.fury.io/py/tarball-downloader.svg)](https://badge.fury.io/py/tarball-downloader)
+[![PyPI version](https://badge.fury.io/py/download-tarball.svg)](https://badge.fury.io/py/download-tarball)
 
 Automates manual Python library installation through the *PyPi* `tar.gz` tarball. If no tarball is found, the program will look for next available `.zip` file and install the package. I've used this in the past when *pip* hasn't worked out, and I have to revert to manual installation of Python libraries. 
 
 #### Install with:
 
-`pip install tarball-downloader`
+`pip install download-tarball`
+
+Or:
+
+`python setup.py install`
 
 ## Basic Usage
 
