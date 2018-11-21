@@ -13,6 +13,11 @@ help:
 install:
 	${MAKE} pip_try_first || ${MAKE} pip_handle_error
 
+clean:
+	rm -rf build/
+	rm -rf dist/
+	rm -rf python_tarball_downloader.egg-info
+
 pip_try_first:
 	pip install -r requirements.txt
 
