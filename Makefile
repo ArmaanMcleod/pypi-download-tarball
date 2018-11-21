@@ -11,6 +11,7 @@ help:
 	@echo "install - Install dependencies."
 	@echo "clean - Clean generated directories."
 	@echo "setup - Setup source distribution and wheel."
+	@echo "upload - Upload source distribution and wheel to PyPi."
 
 install:
 	${MAKE} pip_try_first || ${MAKE} pip_handle_error
