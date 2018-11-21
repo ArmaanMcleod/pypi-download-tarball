@@ -1,5 +1,6 @@
 .PHONY: help
 .PHONY: install
+.PHONY: clean
 .PHONY: setup
 .PHONY: upload
 
@@ -8,6 +9,7 @@ MAKEFLAGS += --no-print-directory
 help:
 	@echo "Makefile rules:"
 	@echo "install - Install dependencies."
+	@echo "clean - Clean generated directories."
 	@echo "setup - Setup source distribution and wheel."
 
 install:
