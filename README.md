@@ -43,4 +43,4 @@ pyinstaller
 * This tool currently installs the latest version of your package.
 * This package is currently is platform independent. It should work on **Windows**, **Linux** and **MacOSX**. 
 * If your using a *Unix* enviorment, you might need to use `python3`/`pip3` instead of `python`/`pip`. 
-* Tested on **Python 3.5+**.
+* Works on **Python 3.5+**. 

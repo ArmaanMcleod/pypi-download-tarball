@@ -1,5 +1,5 @@
 # Copyright (c) 2018 Armaan McLeod
-# This script is part of the python-tarball-downloader package.
+# This script is part of the download-tarball package.
 # Released under a MIT License.
 
 import tarfile
