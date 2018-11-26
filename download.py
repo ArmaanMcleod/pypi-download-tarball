@@ -134,6 +134,7 @@ def extract_html(package, url, directory):
 
         # Priority one: tar.gz file
         if candidate_links.get(TAR_EXTENSION):
+            print(candidate_links[TAR_EXTENSION])
             download_file(
                 package=package,
                 url=candidate_links[TAR_EXTENSION],
@@ -259,6 +260,8 @@ def run_download(filename, response, path):
         print("Failed to download %s" % filename)
         raise SystemExit
 
+    return file.name
+
 
 def run_process(command):
     """ Runs Process
@@ -282,8 +285,11 @@ def run_process(command):
         for _ in tqdm(iterable=lines, total=len(lines)):
             sleep(0.1)
 
-    if process.returncode != 0:
-        raise CalledProcessError(returncode=process.returncode, cmd=process.args)
+    returncode = process.returncode
+    if returncode != 0:
+        raise CalledProcessError(returncode=returncode, cmd=process.args)
+
+    return returncode
 
 
 def extract_zip(path, directory, package):
@@ -294,7 +300,7 @@ def extract_zip(path, directory, package):
 
     Args:
         package (str): The package to install
-        url (str): The URL to scrape package source file
+        path (str): The path of the zip file
         directory (str): The temporary directory to store file
 
     Raises:
@@ -311,13 +317,16 @@ def extract_zip(path, directory, package):
     # Extract file prefix
     filename = basename(path)
     zip_name, _ = splitext(filename)
+    zip_path = join(directory, zip_name)
 
     # Switch to directory and Check that setup.py exists
     # Running setup.py from a path for some reason doesn't work
-    chdir(path=join(directory, zip_name))
+    chdir(path=zip_path)
     if not exists(path=SETUP_SCRIPT):
         print("%s for package %s does not exist" % (SETUP_SCRIPT, package))
         raise SystemExit
+
+    return zip_path
 
 
 def extract_tarball(path, directory, package):
@@ -328,7 +337,7 @@ def extract_tarball(path, directory, package):
 
     Args:
         package (str): The package to install
-        url (str): The URL to scrape package source file
+        path (str): The path of the zip file
         directory (str): The temporary directory to store file
 
     Raises:
@@ -344,6 +353,7 @@ def extract_tarball(path, directory, package):
 
     # Extract file prefix
     tar_name, _, _ = basename(tar.name).rsplit(".", 2)
+    tar_path = join(directory, tar_name)
 
     # Move directory into temporary directory
     # Avoids flooding current working directory with too many folders
@@ -351,10 +361,12 @@ def extract_tarball(path, directory, package):
 
     # Switch to directory and Check that setup.py exists
     # Running setup.py from a path for some reason doesn't work
-    chdir(path=join(directory, tar_name))
+    chdir(path=tar_path)
     if not exists(path=SETUP_SCRIPT):
         print("%s for package %s does not exist" % (SETUP_SCRIPT, package))
         raise SystemExit
+
+    return tar_path
 
 
 def main():
