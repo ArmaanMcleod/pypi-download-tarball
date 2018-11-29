@@ -233,6 +233,9 @@ def run_download(filename, response, path):
         response (requests.models.Request): The response header from HTTP request
         path (str): The path to write file to
 
+    Returns:
+        str: The path of the downloaded file
+
     Raises:
         SystemExit: If download was unsuccessful
 
@@ -271,6 +274,9 @@ def run_process(command):
     Args:
         command (list): A list of commands to excecute
 
+    Returns:
+        int: The return code of the process ran
+
     Raises:
         CalledProcessError: If the process opened could not be called
 
@@ -302,6 +308,9 @@ def extract_zip(path, directory, package):
         package (str): The package to install
         path (str): The path of the zip file
         directory (str): The temporary directory to store file
+
+    Returns:
+        str: The path of zip file extracted
 
     Raises:
         SystemExit: If setup.py does not exist, we can't perform installation
@@ -339,6 +348,9 @@ def extract_tarball(path, directory, package):
         package (str): The package to install
         path (str): The path of the zip file
         directory (str): The temporary directory to store file
+
+    Returns:
+        str: The path of tar file extracted
 
     Raises:
         SystemExit: If setup.py does not exist, we can't perform installation
