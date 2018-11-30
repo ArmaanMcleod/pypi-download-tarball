@@ -100,30 +100,6 @@ def request_url(url, stream):
         sys.exit(0)
 
 
-@contextmanager
-def subprocess_popen(command):
-    """Handles opening a process for a command
-
-    Catches KeyboardInterrupt exception while in process, since child process will
-    still throw this exception even if parent process catches it.
-
-    Args:
-        command (list): The command to excecute
-
-    Yields:
-        subprocess.Popen: The process to execute
-
-    Raises:
-        SystemExit: If process was interrupted by KeyboardInterrupt.
-    """
-    try:
-        yield Popen(
-            args=command, shell=False, stdout=PIPE, bufsize=1, universal_newlines=True
-        )
-    except KeyboardInterrupt:
-        sys.exit(0)
-
-
 def extract_html(package, url, directory):
     """Extracts HTML from web page.
 
@@ -310,7 +286,9 @@ def run_process(command):
 
     # Process command and log each line from stdout
     # This is needed to find any errors in installation
-    with subprocess_popen(command=command) as process:
+    with Popen(
+        args=command, shell=False, stdout=PIPE, bufsize=1, universal_newlines=True
+    ) as process:
         lines = list(process.stdout)
         for _ in tqdm(iterable=lines, total=len(lines)):
             sleep(0.1)
