@@ -38,8 +38,6 @@ from math import ceil
 
 from zipfile import ZipFile
 
-from sys import executable
-
 from contextlib import contextmanager
 from contextlib import suppress
 
@@ -57,7 +55,7 @@ SETUP_SCRIPT, REQUIREMENTS_FILE = "setup.py", "requirements.txt"
 
 # Install requirements command
 REQUIREMENTS_COMMAND = [
-    executable,
+    sys.executable,
     "-m",
     "pip",
     "install",
@@ -67,7 +65,7 @@ REQUIREMENTS_COMMAND = [
 ]
 
 # Setup installation command
-SETUP_COMMAND = [executable, SETUP_SCRIPT, "install", "--user"]
+SETUP_COMMAND = [sys.executable, SETUP_SCRIPT, "install", "--user"]
 
 
 @contextmanager

@@ -24,6 +24,10 @@ from shutil import rmtree
 from contextlib import closing
 from zipfile import ZipFile
 
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 class Tests(unittest.TestCase):
     @classmethod
@@ -31,6 +35,7 @@ class Tests(unittest.TestCase):
         self.temp_folders = []
 
     def test_parse_file(self):
+        logger.info("Running Test: test_parse_file")
         with open("test.txt", mode="w") as f:
             f.write("tqdm\n")
             f.write("twine\n")
@@ -62,6 +67,7 @@ class Tests(unittest.TestCase):
         return downloaded_file
 
     def test_download_file(self):
+        logger.info("Running Test: test_download_file")
         downloaded_file = self.download_package(
             link="https://files.pythonhosted.org/packages/40/35/298c36d839547b50822985a2cf0611b3b978a5ab7a5af5562b8ebe3e1369/requests-2.20.1.tar.gz"
         )
@@ -74,11 +80,13 @@ class Tests(unittest.TestCase):
         self.assertTrue(isfile(downloaded_file))
 
     def test_process(self):
+        logger.info("Running Test: test_process")
         self.assertEqual(download.run_process(["ls"]), 0)
         self.assertEqual(download.run_process(["ls", "-la"]), 0)
         self.assertRaises(FileNotFoundError, lambda: download.run_process(["blah"]))
 
     def test_tar_extract(self):
+        logger.info("Running Test: test_tar_extract")
         downloaded_file = self.download_package(
             link="https://files.pythonhosted.org/packages/40/35/298c36d839547b50822985a2cf0611b3b978a5ab7a5af5562b8ebe3e1369/requests-2.20.1.tar.gz"
         )
@@ -100,6 +108,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(num_archived_files, num_extracted_files)
 
     def test_zip_extract(self):
+        logger.info("Running Test: test_zip_extract")
         downloaded_file = self.download_package(
             link="https://files.pythonhosted.org/packages/2d/80/1809de155bad674b494248bcfca0e49eb4c5d8bee58f26fe7a0dd45029e2/numpy-1.15.4.zip"
         )
