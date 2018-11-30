@@ -134,7 +134,6 @@ def extract_html(package, url, directory):
 
         # Priority one: tar.gz file
         if candidate_links.get(TAR_EXTENSION):
-            print(candidate_links[TAR_EXTENSION])
             download_file(
                 package=package,
                 url=candidate_links[TAR_EXTENSION],
