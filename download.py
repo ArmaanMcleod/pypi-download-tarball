@@ -4,6 +4,8 @@
 
 import tarfile
 
+import sys
+
 from requests import get
 from requests.exceptions import RequestException
 
@@ -94,7 +96,7 @@ def request_url(url, stream):
         yield response
     except RequestException as error:
         print(error)
-        raise SystemExit
+        sys.exit(0)
 
 
 def extract_html(package, url, directory):
@@ -156,7 +158,7 @@ def extract_html(package, url, directory):
                 "%s or %s source file could not be found from %s"
                 % (TAR_EXTENSION, ZIP_EXTENSION, url)
             )
-            raise SystemExit
+            sys.exit(0)
 
 
 def parse_file(filename):
@@ -260,7 +262,7 @@ def run_download(filename, response, path):
     # Otherwise file not fully written
     if total_size != 0 and bytes_wrote != total_size:
         print("Failed to download %s" % filename)
-        raise SystemExit
+        sys.exit(0)
 
     return file.name
 
@@ -332,7 +334,7 @@ def extract_zip(path, directory, package):
     chdir(path=zip_path)
     if not exists(path=SETUP_SCRIPT):
         print("%s for package %s does not exist" % (SETUP_SCRIPT, package))
-        raise SystemExit
+        sys.exit(0)
 
     return zip_path
 
@@ -375,7 +377,7 @@ def extract_tarball(path, directory, package):
     chdir(path=tar_path)
     if not exists(path=SETUP_SCRIPT):
         print("%s for package %s does not exist" % (SETUP_SCRIPT, package))
-        raise SystemExit
+        sys.exit(0)
 
     return tar_path
 
