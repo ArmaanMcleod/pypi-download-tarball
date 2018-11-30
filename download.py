@@ -41,6 +41,7 @@ from zipfile import ZipFile
 from sys import executable
 
 from contextlib import contextmanager
+from contextlib import suppress
 
 # Global variables defined here
 ROOT_URL = "https://pypi.org/project/"
@@ -96,6 +97,30 @@ def request_url(url, stream):
         yield response
     except RequestException as error:
         print(error)
+        sys.exit(0)
+
+
+@contextmanager
+def subprocess_popen(command):
+    """Handles opening a process for a command
+
+    Catches KeyboardInterrupt exception while in process, since child process will
+    still throw this exception even if parent process catches it.
+
+    Args:
+        command (list): The command to excecute
+
+    Yields:
+        subprocess.Popen: The process to execute
+
+    Raises:
+        SystemExit: If process was interrupted by KeyboardInterrupt.
+    """
+    try:
+        yield Popen(
+            args=command, shell=False, stdout=PIPE, bufsize=1, universal_newlines=True
+        )
+    except KeyboardInterrupt:
         sys.exit(0)
 
 
@@ -285,9 +310,7 @@ def run_process(command):
 
     # Process command and log each line from stdout
     # This is needed to find any errors in installation
-    with Popen(
-        args=command, shell=False, stdout=PIPE, bufsize=1, universal_newlines=True
-    ) as process:
+    with subprocess_popen(command=command) as process:
         lines = list(process.stdout)
         for _ in tqdm(iterable=lines, total=len(lines)):
             sleep(0.1)
@@ -418,4 +441,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    with suppress(BaseException):
+        main()
