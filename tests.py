@@ -34,6 +34,7 @@ class Tests(unittest.TestCase):
     def setUpClass(self):
         self.temp_folders = []
 
+    @unittest.skip
     def test_parse_file(self):
         logger.info("Running Test: test_parse_file")
         with open("test.txt", mode="w") as f:
@@ -66,6 +67,7 @@ class Tests(unittest.TestCase):
 
         return downloaded_file
 
+    @unittest.skip
     def test_download_file(self):
         logger.info("Running Test: test_download_file")
         downloaded_file = self.download_package(
@@ -79,12 +81,14 @@ class Tests(unittest.TestCase):
         )
         self.assertTrue(isfile(downloaded_file))
 
+    @unittest.skip
     def test_process(self):
         logger.info("Running Test: test_process")
         self.assertEqual(download.run_process(["ls"]), 0)
         self.assertEqual(download.run_process(["ls", "-la"]), 0)
         self.assertRaises(FileNotFoundError, lambda: download.run_process(["blah"]))
 
+    @unittest.skip
     def test_tar_extract(self):
         logger.info("Running Test: test_tar_extract")
         downloaded_file = self.download_package(
@@ -107,6 +111,7 @@ class Tests(unittest.TestCase):
 
         self.assertEqual(num_archived_files, num_extracted_files)
 
+    @unittest.skip
     def test_zip_extract(self):
         logger.info("Running Test: test_zip_extract")
         downloaded_file = self.download_package(

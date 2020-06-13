@@ -7,12 +7,12 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name="download-tarball",
+    name="pypi-download-tarball",
     version="0.0.7", 
     description="Automates manual installation of Python modules.",
     long_description=long_description, 
     long_description_content_type="text/markdown",
-    url="https://github.com/OpticGenius/download-tarball",
+    url="https://github.com/OpticGenius/pypi-download-tarball",
     author="Armaan McLeod",
     author_email="opticgenius@hotmail.com", 
     classifiers=[
@@ -33,9 +33,9 @@ setup(
     extras_require={}, 
     package_data={},
     data_files=[],  
-    entry_points={"console_scripts": ["download=download:main"]}, 
+    entry_points={"console_scripts": ["pypi-download-tarball=download:main"]}, 
     project_urls={  
-        "Bug Reports": "https://github.com/OpticGenius/download-tarball/issues",
-        "Source": "https://github.com/OpticGenius/download-tarball",
+        "Bug Reports": "https://github.com/OpticGenius/pypi-download-tarball/issues",
+        "Source": "https://github.com/OpticGenius/pypi-download-tarball",
     },
 )
