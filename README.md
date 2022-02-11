@@ -1,4 +1,4 @@
-# DEPRECATED
+# PyPI Download Tarball - DEPRECATED
 
 [![PyPI version](https://badge.fury.io/py/pypi-download-tarball.svg)](https://badge.fury.io/py/pypi-download-tarball)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
